@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OmniGuard AI — New user guide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;0,9..40,800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="site.css" />
+  </head>
+  <body>
+    <div class="bg-layer" aria-hidden="true"></div>
+    <div class="bg-glow" aria-hidden="true"></div>
+
+    <div class="shell">
+      <header class="site-nav" role="navigation" aria-label="Main">
+        <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true"></span> OMNIGUARD</a>
+        <nav class="nav-links">
+          <a class="nav-link" href="index.html">Home</a>
+          <a class="nav-link" href="products.html">Products</a>
+          <a class="nav-link" href="live-lab.html">Live Lab</a>
+          <a class="nav-link active" href="getting-started.html" aria-current="page">New user guide</a>
+          <a class="nav-link" href="resources.html">Resources</a>
+          <a class="nav-cta" href="live-lab.html">Open Live Lab</a>
+        </nav>
+      </header>
+
+      <main class="doc-section">
+        <h1 style="margin: 0 0 8px; font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 800; color: var(--cyan)">New user guide</h1>
+        <p style="margin: 0 0 20px; color: var(--muted)">Follow these steps in order the first time you use OmniGuard. If something fails, check the troubleshooting section at the bottom.</p>
+
+        <h2>First-time setup</h2>
+        <ol class="step-list">
+          <li><strong>Use a supported browser.</strong> Web Serial works in <strong>Chrome</strong> or <strong>Edge</strong> (Chromium). Safari and Firefox do not support Web Serial for this workflow.</li>
+          <li><strong>Serve the site over HTTP or HTTPS.</strong> Open the project from a local server (for example Node: <code>node server.js</code> in the project folder) and visit <code>http://localhost:3000</code>. Web Serial needs a secure or localhost context.</li>
+          <li><strong>Start the API (optional but recommended).</strong> The same <code>server.js</code> exposes <code>GET /api/status</code> so the Live Lab sensor tiles update. Without it, tiles show “API: offline” but Web Serial still works.</li>
+          <li><strong>Open Live Lab.</strong> Go to <a href="live-lab.html" style="color: var(--cyan)">Live Lab</a>, choose baud rate (often <code>115200</code>), click <strong>Connect</strong>, and pick your Arduino/USB serial device.</li>
+          <li><strong>Send numeric lines.</strong> Paste the <a href="#example-sketch" style="color: var(--cyan)">minimal sketch below</a> into Arduino IDE, upload, then open Live Lab.</li>
+        </ol>
+
+        <h2 id="example-sketch">Minimal test sketch (Arduino IDE)</h2>
+        <p style="color: var(--muted); line-height: 1.6">
+          Copy everything in the box into a new sketch, <strong>upload</strong> to your board, close Serial Monitor in Arduino IDE, open <a href="live-lab.html" style="color: var(--cyan)">Live Lab</a>, set baud to <strong>115200</strong>, click <strong>Connect</strong>. You should see numbers in the stream and a moving chart (A0 = analog pin 0).
+        </p>
+        <pre style="background: rgba(0,0,0,0.45); padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(34,197,94,0.35); overflow: auto; font-size: 0.78rem; color: #bbf7d0"><code>void setup() {
+  Serial.begin(115200);
+}
+
+void loop() {
+  Serial.println(analogRead(A0));
+  delay(100);
+}</code></pre>
+
+        <h2 id="usb-c">USB-C (Type-C) and Arduino</h2>
+        <p style="color: var(--muted); line-height: 1.6">
+          The website uses the same Web Serial API no matter whether you plug in with USB-A or USB-C. If connection <strong>fails</strong> with Type-C, the problem is almost always <strong>cable, port, or driver</strong>—not the page code.
+        </p>
+        <ul style="color: var(--muted); line-height: 1.65; padding-left: 1.2rem">
+          <li>
+            <strong>Charge-only USB-C cables</strong> — Very common. They only carry power, so the computer never sees a serial device. Use a cable that says <strong>data</strong> / USB 2.0 or 3.x, or try a different cable you know works for file transfer or another device.
+          </li>
+          <li>
+            <strong>Dongles and hubs</strong> — Cheap USB-C hubs sometimes drop serial or enumerate oddly. Try plugging the board <strong>directly</strong> into the laptop’s USB-C port, or use a simple USB-C→USB-A adapter plus a <strong>known data</strong> USB-A cable to the Arduino.
+          </li>
+          <li>
+            <strong>Drivers</strong> — Boards with <strong>CH340</strong>, <strong>CP2102</strong>, or <strong>FTDI</strong> need the right driver on macOS/Windows. Install the driver from the chip maker or your board vendor, then unplug and replug the board.
+          </li>
+          <li>
+            <strong>Port in use</strong> — Close <strong>Arduino IDE Serial Monitor</strong>, other terminal apps, and any second browser tab that might have the port open. Only one program can use the port at a time.
+          </li>
+          <li>
+            <strong>Pick the right device</strong> — In the browser’s port list, choose the entry that matches your board (often “usbmodem…”, “tty.usbserial…”, “COM…”, or “Arduino”).
+          </li>
+        </ul>
+
+        <h2 id="json-serial">Sending JSON from Arduino (USB-C or USB-A)</h2>
+        <p style="color: var(--muted); line-height: 1.6">
+          The board only speaks <strong>serial</strong> over USB—the cable shape (Type-C vs A) does not matter. Your website reads bytes with <strong>Web Serial</strong>. To use <strong>JSON</strong>, print <strong>one JSON object per line</strong> (then <code>println</code> so each line ends). The Live Lab will <code>JSON.parse</code> lines that start with <code>{</code>.
+        </p>
+        <ul style="color: var(--muted); line-height: 1.65; padding-left: 1.2rem">
+          <li><strong>Chart</strong> — The graph uses the first numeric field it finds, preferring keys like <code>value</code>, <code>telemetry</code>, <code>heartRate</code>, <code>bpm</code>, <code>distance</code>.</li>
+          <li><strong>Upload to your server</strong> — In Live Lab, enable <strong>POST JSON to API</strong>. Each parsed line is sent as the body of <code>POST /api/update-sensors</code> (throttled ~every 400&nbsp;ms). Run <code>node server.js</code> on the same machine so the browser can reach the API.</li>
+          <li><strong>Field names</strong> — Use the same names your tiles expect: <code>movement</code>, <code>rfSignal</code>, <code>heartRate</code>, <code>gaze</code>, <code>objects</code>, <code>aiAlert</code> (see <a href="resources.html" style="color: var(--cyan)">Resources</a>).</li>
+        </ul>
+        <p style="color: var(--muted); font-size: 0.9rem">Minimal Arduino example (escape quotes carefully):</p>
+        <pre style="background: rgba(0,0,0,0.45); padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(61,231,255,0.2); overflow: auto; font-size: 0.78rem; color: #a5f3fc"><code>void setup() {
+  Serial.begin(115200);
+}
+void loop() {
+  Serial.println("{\"heartRate\":72,\"movement\":\"Stable\",\"rfSignal\":\"Clear\"}");
+  delay(500);
+}</code></pre>
+        <p style="color: var(--muted); font-size: 0.88rem">For many fields, the <a href="https://arduinojson.org/" style="color: var(--violet)">ArduinoJson</a> library builds valid JSON without manual escaping.</p>
+
+        <h2>Understanding the dashboard</h2>
+        <ul style="color: var(--muted); line-height: 1.6; padding-left: 1.2rem">
+          <li><strong>Left panel</strong> — Web Serial stream, Chart.js plot, connect/disconnect.</li>
+          <li><strong>Tiles</strong> — Ultrasonic, RF, heart rate, gaze, objects, and AI alert come from <code>/api/status</code> when the server is running.</li>
+          <li><strong>Click a sensor tile</strong> — Opens a short explanation modal (architecture and product modals work the same way).</li>
+        </ul>
+
+        <h2>Troubleshooting</h2>
+        <ul style="color: var(--muted); line-height: 1.6; padding-left: 1.2rem">
+          <li><strong>Type-C not working</strong> — See <a href="#usb-c" style="color: var(--cyan)">USB-C section above</a>: data cable, direct port, drivers.</li>
+          <li><strong>No serial port in the list</strong> — Replug USB, try another cable, install CH340/CP210x/FTDI driver, check System Information / Device Manager for the device.</li>
+          <li><strong>Connect fails or “Failed to open serial port”</strong> — Close Arduino IDE Serial Monitor and any other serial app; try another USB port or cable.</li>
+          <li><strong>Connected but no lines in the stream / flat chart</strong> — Use <code>Serial.println(...)</code> so each message ends with a <strong>newline</strong> (<code>Serial.print</code> alone may buffer until a line ends). Match <strong>baud</strong>: Live Lab dropdown must equal <code>Serial.begin(9600)</code> or <code>115200</code>, etc. The chart only moves if the line contains a <strong>number</strong> or JSON with a numeric field (see <a href="#json-serial" style="color: var(--cyan)">JSON section</a>).</li>
+          <li><strong>API offline</strong> — Run <code>node server.js</code> from the project directory; see <a href="resources.html" style="color: var(--cyan)">Resources</a> for endpoints.</li>
+        </ul>
+
+        <p style="margin-top: 24px">
+          <a class="btn btn-primary" href="live-lab.html">Go to Live Lab</a>
+          <a class="btn" href="index.html" style="margin-left: 8px">Back to home</a>
+        </p>
+      </main>
+
+      <footer class="site-footer">© OmniGuard AI — new user guide</footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OmniGuard AI — Live Lab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;0,9..40,800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="site.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <div class="bg-layer" aria-hidden="true"></div>
+    <div class="bg-glow" aria-hidden="true"></div>
+
+    <div class="shell">
+      <header class="site-nav" role="navigation" aria-label="Main">
+        <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true"></span> OMNIGUARD</a>
+        <nav class="nav-links">
+          <a class="nav-link" href="index.html">Home</a>
+          <a class="nav-link" href="products.html">Products</a>
+          <a class="nav-link active" href="live-lab.html" aria-current="page">Live Lab</a>
+          <a class="nav-link" href="getting-started.html">New user guide</a>
+          <a class="nav-link" href="resources.html">Resources</a>
+          <a class="nav-cta" href="getting-started.html">First time?</a>
+        </nav>
+      </header>
+
+      <header class="top-strip">
+        <div>
+          <strong style="color: var(--cyan)">LIVE LAB</strong>
+          <span class="pill-row" style="display: inline-flex; margin-left: 10px; vertical-align: middle">
+            <span class="pill">Web Serial + Chart.js</span>
+            <span class="pill" id="apiPill">API: …</span>
+          </span>
+        </div>
+        <div style="font-size: 0.78rem; color: var(--muted)">
+          <span class="status-dot" id="liveDot"></span>
+          <span id="serialPill">Web Serial: checking</span>
+        </div>
+      </header>
+
+      <section class="bento" aria-label="Command center">
+        <div class="tile tile-span-6 live-panel" style="grid-row: span 2">
+          <div class="tile-label">Serial stream &amp; telemetry</div>
+          <div class="serial-toolbar">
+            <button type="button" class="btn btn-primary" id="connectBtn">Connect</button>
+            <button type="button" class="btn" id="disconnectBtn" disabled>Disconnect</button>
+            <label class="sr-only" for="baudRate">Baud</label>
+            <select id="baudRate" title="Baud rate">
+              <option value="9600">9600</option>
+              <option value="57600">57600</option>
+              <option value="115200" selected>115200</option>
+            </select>
+            <label class="sr-only" for="maxPoints">Max points</label>
+            <input type="number" id="maxPoints" value="200" min="20" max="2000" title="Max chart points" style="width: 72px" />
+            <button type="button" class="btn" id="clearBtn">Clear</button>
+            <span id="status" style="font-size: 0.75rem; color: var(--muted)">Status: idle</span>
+            <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--muted); cursor: pointer; margin-left: 4px">
+              <input type="checkbox" id="forwardJsonApi" />
+              POST JSON to API
+            </label>
+          </div>
+          <p style="margin: 0; font-size: 0.72rem; line-height: 1.45; color: var(--muted); max-width: 56ch">
+            <strong style="color: var(--cyan)">USB-C?</strong> Many Type-C cables are <em>power-only</em>—the PC will not see the Arduino. Use a <strong>data</strong> cable, try USB-A + adapter, install board drivers (CH340 / CP210x), and close Arduino Serial Monitor.
+            <a href="getting-started.html#usb-c" style="color: var(--violet)">Full guide →</a>
+          </p>
+          <details style="margin: 0; font-size: 0.72rem; color: var(--muted); max-width: 56ch; line-height: 1.5">
+            <summary style="cursor: pointer; color: var(--cyan); font-weight: 600">Arduino sketch tips (why the stream might look empty)</summary>
+            <ul style="margin: 8px 0 0; padding-left: 1.15rem">
+              <li>The box below shows <strong>only data from your board</strong>—not errors from the website.</li>
+              <li>Match baud: <code>Serial.begin(115200)</code> here = <strong>115200</strong> in the menu above (or both 9600).</li>
+              <li>The <strong>chart</strong> needs a <strong>number</strong> per line, or JSON with a numeric field — <a href="getting-started.html#json-serial" style="color: var(--violet)">JSON help</a>.</li>
+            </ul>
+            <p style="margin: 10px 0 4px; font-weight: 600; color: var(--text)">Paste this sketch in Arduino IDE → Upload:</p>
+            <pre style="margin: 0 0 0; background: rgba(0,0,0,0.5); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(61,231,255,0.25); overflow: auto; font-size: 0.68rem; color: #a5f3fc; line-height: 1.4"><code>void setup() {
+  Serial.begin(115200);
+}
+void loop() {
+  Serial.println(analogRead(A0));
+  delay(100);
+}</code></pre>
+            <p style="margin: 6px 0 0; font-size: 0.68rem"><a href="getting-started.html#example-sketch" style="color: var(--violet)">Longer guide →</a></p>
+          </details>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.75rem">
+            <span>Last: <strong id="lastValue" style="color: var(--cyan)">—</strong></span>
+            <span>Samples: <strong id="sampleCount">0</strong></span>
+            <span>Stream: <strong id="deviceState" style="color: var(--violet)">idle</strong></span>
+          </div>
+          <div class="chart-box">
+            <canvas id="chart"></canvas>
+          </div>
+          <div class="stream-mini" id="stream" aria-label="Serial stream"></div>
+        </div>
+
+        <button type="button" class="tile tile-span-3 tile-interactive" data-open-modal="sensor-ultrasonic">
+          <div class="tile-icon" aria-hidden="true">◎</div>
+          <div class="tile-label">Ultrasonic</div>
+          <div class="tile-kpi" id="val-movement">—</div>
+          <div class="tile-hint">Movement · tap for details</div>
+        </button>
+        <button type="button" class="tile tile-span-3 tile-interactive" data-open-modal="sensor-rf">
+          <div class="tile-icon" aria-hidden="true">📡</div>
+          <div class="tile-label">RF</div>
+          <div class="tile-kpi" id="val-rf" style="font-size: 1.1rem">—</div>
+          <div class="tile-hint">RF detection</div>
+        </button>
+        <button type="button" class="tile tile-span-3 tile-interactive" data-open-modal="sensor-heart">
+          <div class="tile-icon" aria-hidden="true">♥</div>
+          <div class="tile-label">Heart rate</div>
+          <div class="tile-kpi" id="val-hr">—</div>
+          <div class="tile-hint">BPM · API</div>
+        </button>
+        <button type="button" class="tile tile-span-3 tile-interactive" data-open-modal="sensor-gaze">
+          <div class="tile-icon" aria-hidden="true">👁</div>
+          <div class="tile-label">Gaze</div>
+          <div class="tile-kpi" id="val-gaze" style="font-size: 1rem">—</div>
+          <div class="tile-hint">Gaze tracking</div>
+        </button>
+
+        <div class="tile tile-span-4">
+          <div class="tile-label">Objects &amp; risk</div>
+          <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: baseline">
+            <div>
+              <div class="tile-hint" style="margin: 0 0 4px">Objects</div>
+              <div id="val-objects" style="font-weight: 700; color: var(--violet)">—</div>
+            </div>
+            <div>
+              <div class="tile-hint" style="margin: 0 0 4px">AI alert</div>
+              <div id="val-alert" style="font-weight: 800; color: var(--cyan)">—</div>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="tile tile-span-4 tile-interactive" data-open-modal="products">
+          <div class="tile-label">Product</div>
+          <div style="font-weight: 700">OmniGuard stack</div>
+          <div class="tile-hint">Details · click</div>
+        </button>
+        <button type="button" class="tile tile-span-4 tile-interactive" data-open-modal="architecture">
+          <div class="tile-label">System</div>
+          <div style="font-weight: 700">Edge → API → UI</div>
+          <div class="tile-hint">Architecture · click</div>
+        </button>
+      </section>
+
+      <footer class="site-footer">© OmniGuard AI — Live Lab · <a href="getting-started.html" style="color: var(--cyan)">New user guide</a></footer>
+    </div>
+
+    <div class="modal-backdrop" id="modalRoot" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="modal" id="modalPanel" tabindex="-1">
+        <button type="button" class="modal-close" id="modalClose" aria-label="Close">×</button>
+        <div id="modalBody"></div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="live-lab-extras.js"></script>
+  </body>
+</html>

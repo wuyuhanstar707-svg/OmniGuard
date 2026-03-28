@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OmniGuard AI — Resources &amp; API</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;0,9..40,800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="site.css" />
+  </head>
+  <body>
+    <div class="bg-layer" aria-hidden="true"></div>
+    <div class="bg-glow" aria-hidden="true"></div>
+
+    <div class="shell">
+      <header class="site-nav" role="navigation" aria-label="Main">
+        <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true"></span> OMNIGUARD</a>
+        <nav class="nav-links">
+          <a class="nav-link" href="index.html">Home</a>
+          <a class="nav-link" href="products.html">Products</a>
+          <a class="nav-link" href="live-lab.html">Live Lab</a>
+          <a class="nav-link" href="getting-started.html">New user guide</a>
+          <a class="nav-link active" href="resources.html" aria-current="page">Resources</a>
+          <a class="nav-cta" href="live-lab.html">Open Live Lab</a>
+        </nav>
+      </header>
+
+      <main class="doc-section">
+        <h1 style="margin: 0 0 8px; font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 800; color: var(--violet)">Resources &amp; API</h1>
+        <p style="margin: 0 0 20px; color: var(--muted)">Local server commands, REST endpoints for sensor fusion, and health check—useful when integrating a Pi or custom firmware.</p>
+
+        <h2>Run the dev server</h2>
+        <p>From the project folder:</p>
+        <pre style="background: rgba(0,0,0,0.45); padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(61,231,255,0.2); overflow: auto; font-size: 0.85rem; color: #a5f3fc"><code>cd "/path/to/News 3"
+node server.js</code></pre>
+        <p>Then open <code>http://localhost:3000</code> — static pages and API share the same origin.</p>
+
+        <h2>Sensor API (Express)</h2>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; color: var(--muted)">
+          <thead>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.12)">
+              <th style="text-align: left; padding: 8px; color: var(--cyan)">Method</th>
+              <th style="text-align: left; padding: 8px; color: var(--cyan)">Path</th>
+              <th style="text-align: left; padding: 8px; color: var(--cyan)">Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.06)">
+              <td style="padding: 8px"><code>GET</code></td>
+              <td style="padding: 8px"><code>/api/status</code></td>
+              <td style="padding: 8px">JSON: movement, rfSignal, heartRate, gaze, objects, aiAlert</td>
+            </tr>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.06)">
+              <td style="padding: 8px"><code>POST</code></td>
+              <td style="padding: 8px"><code>/api/update-sensors</code></td>
+              <td style="padding: 8px">Merge JSON body into live state (body: application/json)</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px"><code>GET</code></td>
+              <td style="padding: 8px"><code>/health</code></td>
+              <td style="padding: 8px"><code>{"ok":true}</code> liveness probe</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2 id="arduino-json">Arduino → browser → JSON API</h2>
+        <p style="color: var(--muted)">Arduino over USB sends <strong>text lines</strong>. The Live Lab can treat a line as JSON and, if you enable <strong>POST JSON to API</strong>, forward that object to <code>POST /api/update-sensors</code>. Same-origin rules apply: open the site from <code>http://localhost:3000</code> while <code>server.js</code> runs. See <a href="getting-started.html#json-serial" style="color: var(--cyan)">New user guide → JSON section</a>.</p>
+
+        <h2>Example: POST sensor update</h2>
+        <pre style="background: rgba(0,0,0,0.45); padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(168,85,247,0.25); overflow: auto; font-size: 0.8rem; color: #e9d5ff"><code>curl -X POST http://localhost:3000/api/update-sensors \
+  -H "Content-Type: application/json" \
+  -d '{"movement":"Motion","heartRate":78,"aiAlert":"Low Risk"}'</code></pre>
+
+        <h2>Deploying static pages</h2>
+        <p>For GitHub Pages, publish <code>index.html</code>, <code>site.css</code>, <code>live-lab.html</code>, <code>app.js</code>, and related HTML files. Web Serial still requires a supported browser; the API must be hosted separately or replaced with your backend.</p>
+
+        <p style="margin-top: 24px">
+          <a class="btn btn-primary" href="getting-started.html">New user guide</a>
+          <a class="btn" href="index.html" style="margin-left: 8px">Home</a>
+        </p>
+      </main>
+
+      <footer class="site-footer">© OmniGuard AI — resources</footer>
+    </div>
+  </body>
+</html>
